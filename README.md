@@ -5,7 +5,7 @@
 [![Release](https://github.com/azra026/docker-engine-gateway-api/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/azra026/docker-engine-gateway-api/actions/workflows/release.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/azra026/docker-engine-gateway-api)](https://goreportcard.com/report/github.com/azra026/docker-engine-gateway-api)
-[![Built with Go](https://img.shields.io/badge/Go-1.23%2B-00ADD8.svg)](https://go.dev)
+[![Built with Go](https://img.shields.io/badge/Go-1.26%2B-00ADD8.svg)](https://go.dev)
 
 A tiny, dependency-free reverse proxy that puts a **Bearer-token authentication
 layer** in front of the local Docker Engine API. The Docker daemon socket
@@ -58,7 +58,7 @@ allow-listing are **out of scope** (see [Roadmap](#roadmap)).
 ### Run from source
 
 ```bash
-# Requires Go 1.23+ and a reachable Docker socket.
+# Requires Go 1.26+ and a reachable Docker socket.
 export GATEWAY_AUTH_TOKEN="$(openssl rand -hex 32)"
 go run .
 ```
