@@ -81,10 +81,11 @@ curl -s -H "Authorization: Bearer $GATEWAY_AUTH_TOKEN" localhost:8080/version
 
 ```bash
 docker build -t docker-engine-gateway-api .
+export GATEWAY_AUTH_TOKEN="$(openssl rand -hex 32)"
 
 docker run --rm \
   -p 8080:8080 \
-  -e GATEWAY_AUTH_TOKEN="$(openssl rand -hex 32)" \
+  -e GATEWAY_AUTH_TOKEN="$GATEWAY_AUTH_TOKEN" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   docker-engine-gateway-api
 ```
@@ -95,26 +96,70 @@ docker run --rm \
 > `--group-add "$(getent group docker | cut -d: -f3)"` to the `docker run`
 > command (or set the equivalent in your orchestrator).
 
+### Run with systemd
+
+An example unit file is available at [`examples/docker-engine-gateway-api.service`](./examples/docker-engine-gateway-api.service).
+
+Recommended for Ubuntu binary installs with Caddy in front of the gateway:
+
+```bash
+sudo install -m 0755 docker-engine-gateway-api /usr/local/bin/docker-engine-gateway-api
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin docker-gateway
+sudo usermod -aG docker docker-gateway
+sudo install -m 0644 examples/docker-engine-gateway-api.service /etc/systemd/system/docker-engine-gateway-api.service
+sudo install -d -m 0750 /etc/docker-engine-gateway-api
+printf '%s' "$(openssl rand -hex 32)" | sudo tee /etc/docker-engine-gateway-api/token >/dev/null
+printf '%s\n' 'GATEWAY_AUTH_TOKEN_FILE=/etc/docker-engine-gateway-api/token' | sudo tee /etc/default/docker-engine-gateway-api >/dev/null
+printf '%s\n' 'GATEWAY_TRUST_PROXY=true' | sudo tee -a /etc/default/docker-engine-gateway-api >/dev/null
+sudo systemctl daemon-reload
+sudo systemctl enable --now docker-engine-gateway-api
+
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+sudo chmod o+r /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy
+sudo systemctl enable --now caddy
+
+sudo install -m 0644 examples/Caddyfile /etc/caddy/Caddyfile
+sudo sed -i 's/reverse_proxy gateway:8080/reverse_proxy 127.0.0.1:8080/' /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+Replace `docker.example.com` in the Caddyfile with your real hostname if you
+are using one. Caddy will then serve HTTPS automatically, provided DNS and
+ports 80/443 are reachable.
+
 ### Run from GHCR
 
 ```bash
 docker pull ghcr.io/azra026/docker-engine-gateway-api:latest
+export GATEWAY_AUTH_TOKEN="$(openssl rand -hex 32)"
+
+docker run --rm \
+  -p 8080:8080 \
+  -e GATEWAY_AUTH_TOKEN="$GATEWAY_AUTH_TOKEN" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  ghcr.io/azra026/docker-engine-gateway-api:latest
 ```
 
-### Caddy
-
-For production, terminate TLS with Caddy and keep the gateway on the private
-side of the network. The recommended deployment pair is
-[examples/Caddyfile](./examples/Caddyfile) and
-[examples/docker-compose.yml](./examples/docker-compose.yml).
+### Run with Docker Compose
 
 ```bash
-docker compose -f examples/docker-compose.yml up -d
+cd examples
+printf '%s' "$(openssl rand -hex 32)" > gateway_token
+docker compose up -d
 ```
 
-Keep `GATEWAY_TRUST_PROXY=true` when the gateway sits behind Caddy so the
-auth-throttling key can use the trusted client IP from `X-Forwarded-For`
-(Caddy sets that header by default).
+For Docker Compose, create a `gateway_token` file in the `examples/`
+directory before starting the stack. The gateway container reads that token
+from `/run/secrets/gateway_token`, and Caddy proxies to the gateway service on
+the Compose network.
+
+When Caddy sits in front of the gateway, keep `GATEWAY_TRUST_PROXY=true` so
+auth throttling uses the trusted client IP from `X-Forwarded-For`.
 
 ## Configuration
 

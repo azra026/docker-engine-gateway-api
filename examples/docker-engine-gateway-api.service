@@ -1,0 +1,36 @@
+[Unit]
+Description=Docker Engine API bearer-token gateway
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+User=docker-gateway
+Group=docker-gateway
+SupplementaryGroups=docker
+
+# Set GATEWAY_AUTH_TOKEN_FILE in /etc/default/docker-engine-gateway-api or a drop-in.
+EnvironmentFile=-/etc/default/docker-engine-gateway-api
+
+ExecStart=/usr/local/bin/docker-engine-gateway-api
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=10s
+
+# Hardening: the process only needs to read the token file and connect to docker.sock.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
