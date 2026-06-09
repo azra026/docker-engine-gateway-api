@@ -1,0 +1,10 @@
+# Keep the build context small and free of host artifacts.
+.git
+.gitignore
+.dockerignore
+Dockerfile
+*.md
+LICENSE
+*_test.go
+.github
+dist

@@ -1,0 +1,13 @@
+Docker Engine API Gateway
+Copyright 2026 James Roi Dela Cruz
+
+This product is licensed under the Apache License, Version 2.0 (the "License").
+You may obtain a copy of the License in the LICENSE file or at
+http://www.apache.org/licenses/LICENSE-2.0.
+
+This software is built entirely on the Go standard library and bundles no
+third-party Go modules.
+
+"Docker" is a trademark of Docker, Inc. This project is not affiliated with,
+endorsed by, or sponsored by Docker, Inc. The name is used only to describe
+interoperability with the Docker Engine API.

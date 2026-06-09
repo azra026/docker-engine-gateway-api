@@ -1,0 +1,14 @@
+# Compiled binary (built locally / by go build .)
+/docker-engine-gateway-api
+/gateway
+
+# GoReleaser output
+/dist/
+
+# Local secrets used by the Compose example
+/examples/gateway_token
+
+# Editor / OS cruft
+*.out
+*.test
+.DS_Store

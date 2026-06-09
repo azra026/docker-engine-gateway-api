@@ -1,0 +1,6 @@
+# Caddy terminates HTTPS for your public domain and forwards requests to the
+# gateway. Keep GATEWAY_TRUST_PROXY=true so the gateway can key throttling on
+# the trusted client IP that Caddy appends to X-Forwarded-For.
+docker.example.com {
+	reverse_proxy gateway:8080
+}

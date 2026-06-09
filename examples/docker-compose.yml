@@ -1,0 +1,36 @@
+services:
+  gateway:
+    build:
+      context: ..
+    image: ghcr.io/azra026/docker-engine-gateway-api:latest
+    environment:
+      GATEWAY_AUTH_TOKEN_FILE: /run/secrets/gateway_token
+      GATEWAY_TRUST_PROXY: "true"
+    volumes:
+      # Create ./gateway_token with the shared bearer token for the gateway.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./gateway_token:/run/secrets/gateway_token:ro
+    # Uncomment and set the host docker group GID if the socket is owned by it.
+    # group_add:
+    #   - "999"
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    # Caddy is the only service exposed on the network.
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

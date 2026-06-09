@@ -1,0 +1,65 @@
+# GoReleaser configuration (https://goreleaser.com).
+# Validate locally with: goreleaser check
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: gateway
+    main: .
+    binary: docker-engine-gateway-api
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+
+checksum:
+  name_template: "checksums.txt"
+
+sboms:
+  - artifacts: archive
+
+changelog:
+  use: github
+  sort: asc
+  # Group the release notes by Conventional Commit type.
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Documentation
+      regexp: '^.*?docs(\(.+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - "^chore:"
+      - "^test:"
+      - "^ci:"
+      - "merge conflict"
+
+release:
+  draft: false
+  prerelease: auto
