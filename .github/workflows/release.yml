@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: write # create the GitHub Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # GoReleaser needs full history + tags for the changelog
 
@@ -41,7 +41,7 @@ jobs:
       packages: write # push to GHCR
       id-token: write # cosign keyless signing
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
