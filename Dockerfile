@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: build a static, stripped, version-stamped binary ----
-FROM golang:1.23 AS build
+FROM golang:1.26 AS build
 
 WORKDIR /src
 
