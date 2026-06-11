@@ -226,6 +226,14 @@ func (g *gateway) newReverseProxy() *httputil.ReverseProxy {
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	proxy.Transport = newDockerTransport(g.cfg.Socket)
 
+	// Flush every write straight to the client instead of buffering. The proxy
+	// otherwise only streams responses it recognizes as event-streams or with an
+	// unknown Content-Length, so Docker's incremental output (/build progress,
+	// image pull layers, logs) can arrive all at once at the end. A negative
+	// interval forces an immediate flush after each write, regardless of the
+	// upstream Content-Length. Hijacked connections (exec/attach) are unaffected.
+	proxy.FlushInterval = -1
+
 	baseDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		baseDirector(req)
